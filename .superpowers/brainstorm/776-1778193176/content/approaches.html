@@ -1,0 +1,46 @@
+<h2>3 enfoques arquitectónicos</h2>
+<p class="subtitle">Elige el que mejor encaja con tus objetivos. Hay una recomendación clara.</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Mono-app · Route Groups · Drizzle <span style="color:#22c55e;font-size:12px;margin-left:8px;">★ Recomendado</span></h3>
+      <p>Una sola Next.js app con dos route groups: <code>(customer)</code> para el flujo QR y <code>(admin)</code> para el panel del restaurante. Drizzle ORM sobre Neon. Server Actions para todo. PDF generado en servidor con <code>@react-pdf/renderer</code>. Auth solo en el grupo admin.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Un solo repo, un solo deploy</li><li>Drizzle: TypeScript-first, migrations, zero overhead</li><li>Server Actions = integración POS futura trivial</li><li>FSD encaja naturalmente en route groups</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>PDF pesado bloquea el servidor si hay volumen alto (mitigable con streaming)</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Monorepo Turborepo · apps/customer + apps/admin</h3>
+      <p>Dos Next.js apps independientes en un monorepo pnpm/Turborepo. Paquetes compartidos: <code>@repo/db</code> (Drizzle+Neon), <code>@repo/validators</code> (Zod), <code>@repo/pdf</code>. Deployments separados en Vercel.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>Separación total: el panel admin no carga nada del flujo cliente</li><li>Escala y deploya de forma independiente</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>Setup inicial más costoso</li><li>Overkill para un restaurante o cadena pequeña</li><li>Dos deploys = más superficie de fallo</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Next.js · API Routes como backend explícito</h3>
+      <p>En vez de Server Actions, toda la lógica de datos pasa por Route Handlers REST (<code>/api/invoices</code>, <code>/api/sessions</code>). El cliente llama a la API con fetch. Más próximo a una arquitectura API-first.</p>
+      <div class="pros-cons" style="margin-top:10px;">
+        <div class="pros"><h4>Pros</h4><ul><li>API reutilizable si el POS necesita llamarla directamente</li><li>Más fácil de testear con herramientas HTTP</li></ul></div>
+        <div class="cons"><h4>Contras</h4><ul><li>Más boilerplate que Server Actions</li><li>Pierde co-locación tipo + validación que da Zod+Actions</li><li>Menos FSD-friendly: la lógica de negocio se dispersa</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;padding:12px 16px;background:var(--surface-raised);border-left:3px solid #22c55e;border-radius:4px;">
+  <strong>Mi recomendación: A</strong> — Una sola app bien estructurada con FSD es más que suficiente para este dominio. Drizzle + Server Actions dan type-safety end-to-end sin monorepo overhead. Si el volumen crece, la migración a Turborepo es incremental.
+</div>

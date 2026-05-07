@@ -1,0 +1,76 @@
+<h2>Sección 1 — Arquitectura FSD</h2>
+<p class="subtitle">Capas y responsabilidades. ¿Lo ves bien así?</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+  <!-- Izquierda: estructura de carpetas -->
+  <div>
+    <span class="label">Estructura de carpetas</span>
+    <div style="margin-top:10px;font-family:monospace;font-size:12px;line-height:1.8;background:var(--surface-raised);padding:16px;border-radius:8px;border:1px solid var(--border);">
+      <div style="color:#94a3b8;">src/</div>
+      <div style="color:#f1f5f9;padding-left:12px;">app/</div>
+      <div style="padding-left:24px;color:#22c55e;">(customer)/          <span style="color:#64748b;">← público</span></div>
+      <div style="padding-left:36px;color:#94a3b8;">factura/[mesa]/</div>
+      <div style="padding-left:24px;color:#f59e0b;">(admin)/             <span style="color:#64748b;">← auth</span></div>
+      <div style="padding-left:36px;color:#94a3b8;">facturas/</div>
+      <div style="padding-left:36px;color:#94a3b8;">mesas/</div>
+      <div style="padding-left:36px;color:#94a3b8;">configuracion/</div>
+      <div style="padding-left:24px;color:#94a3b8;">api/pdf/[id]/</div>
+      <br/>
+      <div style="color:#f1f5f9;padding-left:12px;">features/</div>
+      <div style="padding-left:24px;color:#818cf8;">qr-session/          <span style="color:#64748b;">← carga ticket POS</span></div>
+      <div style="padding-left:24px;color:#818cf8;">tax-form/            <span style="color:#64748b;">← captura NIF/CIF</span></div>
+      <div style="padding-left:24px;color:#818cf8;">invoice-emit/        <span style="color:#64748b;">← crea factura + PDF</span></div>
+      <div style="padding-left:24px;color:#818cf8;">admin-invoices/      <span style="color:#64748b;">← listado + filtros</span></div>
+      <div style="padding-left:24px;color:#818cf8;">admin-mesas/         <span style="color:#64748b;">← mesas + QR gen</span></div>
+      <div style="padding-left:24px;color:#818cf8;">admin-config/        <span style="color:#64748b;">← config restaurante</span></div>
+      <br/>
+      <div style="color:#f1f5f9;padding-left:12px;">entities/</div>
+      <div style="padding-left:24px;color:#38bdf8;">mesa/                <span style="color:#64748b;">mesa + sesión POS</span></div>
+      <div style="padding-left:24px;color:#38bdf8;">invoice/             <span style="color:#64748b;">factura emitida</span></div>
+      <div style="padding-left:24px;color:#38bdf8;">restaurante/         <span style="color:#64748b;">config fiscal</span></div>
+      <br/>
+      <div style="color:#f1f5f9;padding-left:12px;">shared/</div>
+      <div style="padding-left:24px;color:#fb7185;">db/                  <span style="color:#64748b;">Drizzle schema + Neon</span></div>
+      <div style="padding-left:24px;color:#fb7185;">lib/                 <span style="color:#64748b;">validación NIF + IVA</span></div>
+      <div style="padding-left:24px;color:#fb7185;">ui/                  <span style="color:#64748b;">componentes base</span></div>
+    </div>
+  </div>
+
+  <!-- Derecha: reglas FSD -->
+  <div>
+    <span class="label">Reglas de dependencias FSD</span>
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;color:#22c55e;margin-bottom:4px;">↓ Solo hacia abajo</div>
+        <div style="font-size:12px;color:var(--text-muted);">app → features → entities → shared. Nunca al revés.</div>
+      </div>
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:4px;">⊘ Sin imports laterales entre features</div>
+        <div style="font-size:12px;color:var(--text-muted);"><code>invoice-emit</code> no importa de <code>tax-form</code> directamente — solo entidades compartidas.</div>
+      </div>
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;color:#818cf8;margin-bottom:4px;">✦ Server/Client boundary</div>
+        <div style="font-size:12px;color:var(--text-muted);">RSC por defecto. <code>"use client"</code> solo en nodos hoja (campos del formulario fiscal, selector de tipo de documento).</div>
+      </div>
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="font-size:12px;font-weight:700;color:#38bdf8;margin-bottom:4px;">⚡ Server Actions</div>
+        <div style="font-size:12px;color:var(--text-muted);">Toda mutación: <code>emitInvoice()</code>, <code>createMesa()</code>, <code>updateConfig()</code>. Validadas con Zod antes de tocar la DB.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <span class="label">Stack técnico</span>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
+        <span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;">Next.js 15 App Router</span>
+        <span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;">TypeScript strict</span>
+        <span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;">Drizzle ORM</span>
+        <span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;">Neon Postgres</span>
+        <span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;">Zod</span>
+        <span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;">@react-pdf/renderer</span>
+        <span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;">NextAuth.js</span>
+        <span style="background:#1e293b;border:1px solid #334155;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;">Tailwind CSS</span>
+      </div>
+    </div>
+  </div>
+</div>

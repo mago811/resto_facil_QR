@@ -1,0 +1,82 @@
+<h2>Sección 3 — Flujos clave (v2)</h2>
+<p class="subtitle">Email añadido al formulario fiscal + envío de copia digital</p>
+
+<!-- FLUJO CLIENTE -->
+<div class="section">
+  <span class="label">Flujo 1 — Cliente (público)</span>
+  <div style="display:flex;gap:0;margin-top:12px;flex-wrap:wrap;">
+
+    <div style="background:var(--surface-raised);border:1px solid #22c55e;border-radius:8px 0 0 8px;padding:12px 14px;min-width:120px;">
+      <div style="font-size:11px;font-weight:700;color:#22c55e;margin-bottom:6px;">1. Escanea QR</div>
+      <div style="font-size:11px;color:var(--text-muted);"><code>/factura?mesa=12</code></div>
+      <div style="font-size:11px;color:#f59e0b;margin-top:4px;">Sin sesión activa → 404</div>
+    </div>
+
+    <div style="width:2px;background:linear-gradient(to bottom,#22c55e,#38bdf8);"></div>
+
+    <div style="background:var(--surface-raised);border-top:1px solid #38bdf8;border-bottom:1px solid #38bdf8;padding:12px 14px;min-width:120px;">
+      <div style="font-size:11px;font-weight:700;color:#38bdf8;margin-bottom:6px;">2. Ve el ticket</div>
+      <div style="font-size:11px;color:var(--text-muted);">Subtotal · IVA 10% · Total. Datos del restaurante emisor.</div>
+    </div>
+
+    <div style="width:2px;background:linear-gradient(to bottom,#38bdf8,#818cf8);"></div>
+
+    <div style="background:var(--surface-raised);border-top:1px solid #818cf8;border-bottom:1px solid #818cf8;padding:12px 14px;min-width:160px;">
+      <div style="font-size:11px;font-weight:700;color:#818cf8;margin-bottom:6px;">3. Formulario fiscal</div>
+      <div style="font-size:11px;color:var(--text-muted);">Tipo doc · NIF/CIF/NIE · Razón social · Dirección</div>
+      <div style="font-size:11px;color:#22c55e;margin-top:6px;font-weight:600;">+ Email <span style="font-weight:400;color:var(--text-muted)">(opcional) — para recibir copia digital</span></div>
+      <div style="font-size:11px;color:#f59e0b;margin-top:4px;">Validación Módulo 11 on-blur. Validación email format on-blur.</div>
+    </div>
+
+    <div style="width:2px;background:linear-gradient(to bottom,#818cf8,#fb7185);"></div>
+
+    <div style="background:var(--surface-raised);border-top:1px solid #fb7185;border-bottom:1px solid #fb7185;padding:12px 14px;min-width:160px;">
+      <div style="font-size:11px;font-weight:700;color:#fb7185;margin-bottom:6px;">4. emitInvoice()</div>
+      <div style="font-size:11px;color:var(--text-muted);">Zod valida todo. Transacción Drizzle:</div>
+      <ol style="font-size:11px;color:var(--text-muted);padding-left:14px;margin:4px 0;line-height:1.8;">
+        <li>Inserta en <code>facturas</code></li>
+        <li>Genera PDF (react-pdf)</li>
+        <li>Sube a Vercel Blob</li>
+        <li>Actualiza <code>pdf_url</code></li>
+        <li>Marca sesión <code>facturada</code></li>
+        <li style="color:#22c55e;font-weight:600;">Si email → encola envío (Resend)</li>
+      </ol>
+    </div>
+
+    <div style="width:2px;background:linear-gradient(to bottom,#fb7185,#22c55e);"></div>
+
+    <div style="background:var(--surface-raised);border:1px solid #22c55e;border-radius:0 8px 8px 0;padding:12px 14px;min-width:130px;">
+      <div style="font-size:11px;font-weight:700;color:#22c55e;margin-bottom:6px;">5. Confirmación</div>
+      <div style="font-size:11px;color:var(--text-muted);">Botón "Descargar PDF".</div>
+      <div style="font-size:11px;color:#22c55e;margin-top:4px;">Si dio email → "Te hemos enviado una copia a tu correo"</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CAMBIOS EN MODELO -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+  <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px;">
+    <span class="label">Cambio en tabla facturas</span>
+    <div style="font-family:monospace;font-size:11px;margin-top:8px;line-height:2;">
+      <div style="color:#94a3b8;">... (campos existentes)</div>
+      <div style="color:#22c55e;font-weight:600;">email_cliente   text nullable</div>
+      <div style="color:#64748b;font-size:10px;">← solo si el cliente lo proporcionó</div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px;">
+    <span class="label">Servicio de email</span>
+    <div style="margin-top:8px;">
+      <div style="font-size:12px;font-weight:700;color:#38bdf8;">Resend</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">SDK oficial para Next.js. Email transaccional con PDF adjunto. Free tier: 3.000 emails/mes.</div>
+      <div style="font-size:11px;margin-top:6px;color:var(--text-muted);">El envío ocurre <strong>fuera de la transacción DB</strong> — si el email falla, la factura ya está guardada. No se revierte.</div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:12px;background:var(--surface-raised);border-left:3px solid #818cf8;border-radius:4px;padding:12px 16px;font-size:12px;">
+  <strong>Email es opcional</strong> — el cliente puede obtener la factura solo descargándola. Si no proporciona email, el flujo es idéntico al anterior.
+</div>

@@ -1,0 +1,93 @@
+<h2>Sección 2 — Modelo de datos (Neon / Drizzle)</h2>
+<p class="subtitle">5 tablas. ¿Falta algún campo o relación?</p>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+
+  <!-- restaurantes -->
+  <div style="background:var(--surface-raised);border:2px solid #f59e0b;border-radius:8px;padding:12px;">
+    <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;">restaurantes</div>
+    <div style="font-family:monospace;font-size:11px;line-height:2;">
+      <div><span style="color:#94a3b8;">id</span> uuid PK</div>
+      <div><span style="color:#94a3b8;">nombre</span> text</div>
+      <div><span style="color:#94a3b8;">cif</span> text</div>
+      <div><span style="color:#94a3b8;">razon_social</span> text</div>
+      <div><span style="color:#94a3b8;">direccion</span> text</div>
+      <div><span style="color:#94a3b8;">iva_porcentaje</span> decimal(4,2) <span style="color:#64748b;">← 0.10</span></div>
+      <div><span style="color:#94a3b8;">created_at</span> timestamptz</div>
+    </div>
+  </div>
+
+  <!-- usuarios -->
+  <div style="background:var(--surface-raised);border:2px solid #818cf8;border-radius:8px;padding:12px;">
+    <div style="font-size:13px;font-weight:700;color:#818cf8;margin-bottom:8px;">usuarios</div>
+    <div style="font-family:monospace;font-size:11px;line-height:2;">
+      <div><span style="color:#94a3b8;">id</span> uuid PK</div>
+      <div><span style="color:#94a3b8;">email</span> text UNIQUE</div>
+      <div><span style="color:#94a3b8;">password_hash</span> text</div>
+      <div><span style="color:#f59e0b;">restaurante_id</span> uuid FK</div>
+      <div><span style="color:#94a3b8;">created_at</span> timestamptz</div>
+    </div>
+  </div>
+
+  <!-- mesas -->
+  <div style="background:var(--surface-raised);border:2px solid #38bdf8;border-radius:8px;padding:12px;">
+    <div style="font-size:13px;font-weight:700;color:#38bdf8;margin-bottom:8px;">mesas</div>
+    <div style="font-family:monospace;font-size:11px;line-height:2;">
+      <div><span style="color:#94a3b8;">id</span> uuid PK</div>
+      <div><span style="color:#94a3b8;">numero</span> integer</div>
+      <div><span style="color:#94a3b8;">nombre</span> text nullable <span style="color:#64748b;">← "Terraza 3"</span></div>
+      <div><span style="color:#f59e0b;">restaurante_id</span> uuid FK</div>
+      <div><span style="color:#94a3b8;">activa</span> boolean</div>
+      <div><span style="color:#94a3b8;">created_at</span> timestamptz</div>
+    </div>
+  </div>
+
+  <!-- sesiones_pos -->
+  <div style="background:var(--surface-raised);border:2px solid #22c55e;border-radius:8px;padding:12px;">
+    <div style="font-size:13px;font-weight:700;color:#22c55e;margin-bottom:8px;">sesiones_pos <span style="font-size:10px;background:#14532d;padding:2px 5px;border-radius:3px;">mock POS</span></div>
+    <div style="font-family:monospace;font-size:11px;line-height:2;">
+      <div><span style="color:#94a3b8;">id</span> uuid PK</div>
+      <div><span style="color:#38bdf8;">mesa_id</span> uuid FK</div>
+      <div><span style="color:#94a3b8;">subtotal</span> decimal(10,2)</div>
+      <div><span style="color:#94a3b8;">descripcion</span> text nullable</div>
+      <div><span style="color:#94a3b8;">estado</span> enum <span style="color:#64748b;">abierta|facturada|cerrada</span></div>
+      <div><span style="color:#94a3b8;">created_at</span> timestamptz</div>
+    </div>
+  </div>
+
+  <!-- facturas -->
+  <div style="background:var(--surface-raised);border:2px solid #fb7185;border-radius:8px;padding:12px;grid-column:span 2;">
+    <div style="font-size:13px;font-weight:700;color:#fb7185;margin-bottom:8px;">facturas</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div style="font-family:monospace;font-size:11px;line-height:2;">
+        <div><span style="color:#94a3b8;">id</span> uuid PK</div>
+        <div><span style="color:#94a3b8;">numero_factura</span> text UNIQUE <span style="color:#64748b;">← REST-2025-0042</span></div>
+        <div><span style="color:#22c55e;">sesion_id</span> uuid FK</div>
+        <div><span style="color:#f59e0b;">restaurante_id</span> uuid FK</div>
+        <div><span style="color:#94a3b8;">documento_tipo</span> enum <span style="color:#64748b;">NIF|CIF|NIE</span></div>
+        <div><span style="color:#94a3b8;">documento_id</span> text <span style="color:#64748b;">← validado Mod.11</span></div>
+      </div>
+      <div style="font-family:monospace;font-size:11px;line-height:2;">
+        <div><span style="color:#94a3b8;">razon_social</span> text</div>
+        <div><span style="color:#94a3b8;">direccion_facturacion</span> text</div>
+        <div><span style="color:#94a3b8;">base_imponible</span> decimal(10,2)</div>
+        <div><span style="color:#94a3b8;">iva_rate</span> decimal(4,2) <span style="color:#64748b;">← 0.10</span></div>
+        <div><span style="color:#94a3b8;">cuota_iva</span> decimal(10,2) <span style="color:#64748b;">← computed</span></div>
+        <div><span style="color:#94a3b8;">total</span> decimal(10,2)</div>
+        <div><span style="color:#94a3b8;">pdf_url</span> text nullable <span style="color:#64748b;">← Vercel Blob</span></div>
+        <div><span style="color:#94a3b8;">created_at</span> timestamptz</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;">
+  <span class="label">Notas de diseño</span>
+  <ul style="margin-top:8px;line-height:2;padding-left:16px;">
+    <li><strong>numero_factura</strong> — formato <code>REST-YYYY-NNNN</code>, secuencial por restaurante. Generado en la Server Action con un counter en DB.</li>
+    <li><strong>cuota_iva</strong> — almacenada, no calculada en runtime, para mantener registro fiscal inmutable (AEAT exige que la factura sea fiel al momento de emisión).</li>
+    <li><strong>pdf_url</strong> — Vercel Blob. Generado asíncronamente tras guardar la factura, URL almacenada en actualización posterior.</li>
+    <li><strong>sesiones_pos</strong> — tabla mock. Cuando llegue integración real, esta tabla se convierte en caché/log del POS externo.</li>
+  </ul>
+</div>

@@ -1,0 +1,93 @@
+<h2>Sección 3 — Flujos clave</h2>
+<p class="subtitle">Flujo del cliente (QR → factura) y flujos del panel admin</p>
+
+<!-- FLUJO CLIENTE -->
+<div class="section">
+  <span class="label">Flujo 1 — Cliente (público)</span>
+  <div style="display:flex;gap:0;margin-top:12px;flex-wrap:wrap;">
+
+    <div style="background:var(--surface-raised);border:1px solid #22c55e;border-radius:8px 0 0 8px;padding:12px 14px;min-width:130px;">
+      <div style="font-size:11px;font-weight:700;color:#22c55e;margin-bottom:6px;">1. Escanea QR</div>
+      <div style="font-size:11px;color:var(--text-muted);">URL: <code>/factura?mesa=12</code></div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">RSC carga la sesión POS activa de la mesa.</div>
+      <div style="font-size:11px;color:#f59e0b;margin-top:4px;">Si no hay sesión → error 404 "Mesa sin consumo activo"</div>
+    </div>
+
+    <div style="width:2px;background:linear-gradient(to bottom,#22c55e,#38bdf8);"></div>
+
+    <div style="background:var(--surface-raised);border-top:1px solid #38bdf8;border-bottom:1px solid #38bdf8;padding:12px 14px;min-width:130px;">
+      <div style="font-size:11px;font-weight:700;color:#38bdf8;margin-bottom:6px;">2. Ve el ticket</div>
+      <div style="font-size:11px;color:var(--text-muted);">RSC muestra resumen del consumo: subtotal, IVA 10%, total.</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Datos del restaurante emisor visibles.</div>
+    </div>
+
+    <div style="width:2px;background:linear-gradient(to bottom,#38bdf8,#818cf8);"></div>
+
+    <div style="background:var(--surface-raised);border-top:1px solid #818cf8;border-bottom:1px solid #818cf8;padding:12px 14px;min-width:150px;">
+      <div style="font-size:11px;font-weight:700;color:#818cf8;margin-bottom:6px;">3. Formulario fiscal</div>
+      <div style="font-size:11px;color:var(--text-muted);"><code>"use client"</code> solo en inputs.</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Campos: tipo doc · NIF/CIF/NIE · Razón social · Dirección</div>
+      <div style="font-size:11px;color:#f59e0b;margin-top:4px;">Validación Módulo 11 on-blur (sin round-trip).</div>
+    </div>
+
+    <div style="width:2px;background:linear-gradient(to bottom,#818cf8,#fb7185);"></div>
+
+    <div style="background:var(--surface-raised);border-top:1px solid #fb7185;border-bottom:1px solid #fb7185;padding:12px 14px;min-width:150px;">
+      <div style="font-size:11px;font-weight:700;color:#fb7185;margin-bottom:6px;">4. Server Action: emitInvoice()</div>
+      <div style="font-size:11px;color:var(--text-muted);">Zod valida payload completo.</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Crea fila en <code>facturas</code>. Genera PDF con react-pdf. Sube a Vercel Blob. Actualiza <code>pdf_url</code>. Marca sesión como <code>facturada</code>.</div>
+      <div style="font-size:11px;color:#f59e0b;margin-top:4px;">Transacción Drizzle — todo o nada.</div>
+    </div>
+
+    <div style="width:2px;background:linear-gradient(to bottom,#fb7185,#22c55e);"></div>
+
+    <div style="background:var(--surface-raised);border:1px solid #22c55e;border-radius:0 8px 8px 0;padding:12px 14px;min-width:130px;">
+      <div style="font-size:11px;font-weight:700;color:#22c55e;margin-bottom:6px;">5. Confirmación</div>
+      <div style="font-size:11px;color:var(--text-muted);">Página de éxito con botón "Descargar PDF".</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Link directo al Blob URL. Hook ESC/POS disponible aquí para cuando haya impresora real.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FLUJOS ADMIN -->
+<div class="section">
+  <span class="label">Flujo 2 — Panel Admin (auth requerida)</span>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;">
+
+    <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:6px;">Mesas + QR</div>
+      <ol style="font-size:11px;color:var(--text-muted);padding-left:14px;line-height:1.8;margin:0;">
+        <li>Crear/editar mesa (número, nombre)</li>
+        <li>Generar QR → imagen PNG con URL <code>/factura?mesa=N</code></li>
+        <li>Crear sesión POS mock (subtotal, descripción)</li>
+        <li>Ver estado: abierta / facturada / cerrada</li>
+      </ol>
+    </div>
+
+    <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#fb7185;margin-bottom:6px;">Facturas</div>
+      <ol style="font-size:11px;color:var(--text-muted);padding-left:14px;line-height:1.8;margin:0;">
+        <li>Listado paginado con filtros (fecha, mesa, NIF)</li>
+        <li>Ver detalle de factura</li>
+        <li>Re-descargar PDF</li>
+        <li>Exportar CSV (AEAT)</li>
+      </ol>
+    </div>
+
+    <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:12px;">
+      <div style="font-size:12px;font-weight:700;color:#818cf8;margin-bottom:6px;">Configuración</div>
+      <ol style="font-size:11px;color:var(--text-muted);padding-left:14px;line-height:1.8;margin:0;">
+        <li>Datos fiscales del restaurante (CIF, razón social, dir.)</li>
+        <li>IVA por defecto (10% hostelería, editable)</li>
+        <li>Gestión de usuarios admin</li>
+        <li>Placeholder webhook ESC/POS futuro</li>
+      </ol>
+    </div>
+
+  </div>
+</div>
+
+<div style="background:var(--surface-raised);border-left:3px solid #f59e0b;border-radius:4px;padding:12px 16px;font-size:12px;">
+  <strong>Validación NIF/CIF/NIE (Módulo 11)</strong> — implementada en <code>shared/lib/validators/spanish-id.ts</code>, pura TS sin dependencias. Se ejecuta en el cliente (on-blur) para feedback inmediato y se re-valida en el Server Action antes de persistir.
+</div>

@@ -1,0 +1,77 @@
+<h2>Sección 4 — Errores, edge cases y testing</h2>
+<p class="subtitle">Casos límite del flujo cliente y estrategia de tests</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+  <!-- Edge cases -->
+  <div>
+    <span class="label">Edge cases críticos</span>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;">Mesa sin sesión activa</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">RSC → página de error amigable: "No hay ningún consumo abierto en esta mesa." Sin stack trace expuesto.</div>
+      </div>
+
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;">Sesión ya facturada</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Server Action detecta <code>estado = 'facturada'</code> → error 409. Mensaje: "Ya se emitió una factura para esta mesa." Evita duplicados.</div>
+      </div>
+
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;">Doble envío concurrente</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">UNIQUE constraint en <code>facturas(sesion_id)</code>. El segundo insert falla a nivel DB → el primero gana, el segundo recibe error 409.</div>
+      </div>
+
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;">Fallo en generación PDF</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">La factura ya está en DB. <code>pdf_url</code> queda <code>null</code>. Página de confirmación muestra botón "Regenerar PDF" que llama a otra Server Action.</div>
+      </div>
+
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;">Fallo en envío email</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">No-op silencioso. La factura está guardada, el PDF disponible. El panel admin muestra un badge "Email no enviado" si Resend reporta error.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Testing -->
+  <div>
+    <span class="label">Estrategia de testing</span>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+
+      <div style="background:var(--surface-raised);border:1px solid #22c55e;border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:#22c55e;">Unit — Vitest</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">
+          <code>shared/lib/validators/spanish-id.ts</code> → suite exhaustiva con casos válidos/inválidos para NIF, CIF y NIE (Módulo 11).
+          <br/>
+          <code>shared/lib/tax/iva.ts</code> → cálculo de bases imponibles y cuotas IVA.
+        </div>
+      </div>
+
+      <div style="background:var(--surface-raised);border:1px solid #38bdf8;border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:#38bdf8;">Integration — Vitest + Neon branch</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">
+          Server Actions testeadas contra una branch de Neon de test.
+          Cubre: <code>emitInvoice()</code> happy path, duplicados, sesión ya facturada.
+        </div>
+      </div>
+
+      <div style="background:var(--surface-raised);border:1px solid #818cf8;border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:#818cf8;">E2E — Playwright</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">
+          Golden path: escanear QR → rellenar formulario → descargar PDF.<br/>
+          Edge: mesa sin sesión, NIF inválido.
+        </div>
+      </div>
+
+      <div style="background:var(--surface-raised);border:1px solid var(--border);border-radius:8px;padding:11px 13px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);">Sin mocks de DB</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">Los tests de integración usan Neon branching — cada run de CI crea una branch efímera, aplica migrations y la destruye al terminar.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
