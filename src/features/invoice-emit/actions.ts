@@ -79,14 +79,19 @@ export async function emitInvoice(
         total: String(total),
       }).returning()
 
-      facturaId = factura!.id
+      if (!factura) throw new Error('Insert did not return a row')
+      facturaId = factura.id
 
       await tx.update(sesionesPos)
         .set({ estado: 'facturada' })
         .where(eq(sesionesPos.id, sesionId))
     })
   } catch (err) {
-    const msg = err instanceof Error && err.message === 'DUPLICATE'
+    const isDuplicate =
+      err instanceof Error &&
+      (err.message === 'DUPLICATE' ||
+       ('code' in err && (err as { code: string }).code === '23505'))
+    const msg = isDuplicate
       ? 'Ya existe una factura para esta sesión'
       : 'Error al crear la factura'
     return { facturaId: '', pdfUrl: null, numeroFactura: '', emailSent: false, error: msg }
@@ -129,7 +134,7 @@ export async function emitInvoice(
   if (data.emailCliente && pdfUrl) {
     try {
       await resend.emails.send({
-        from: 'facturas@restofacil.es',
+        from: process.env.RESEND_FROM_EMAIL ?? 'facturas@restofacil.es',
         to: data.emailCliente,
         subject: `Tu factura ${numeroFactura}`,
         html: `<p>Adjuntamos tu factura <strong>${numeroFactura}</strong>.</p><p><a href="${pdfUrl}">Descargar PDF</a></p>`,
