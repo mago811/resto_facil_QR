@@ -35,10 +35,20 @@ export async function getActiveSession(
     )
     .limit(1)
 
-  if (!result[0]) return null
+  const row = result[0]
+  if (!row) return null
+
+  const sesionRaw = row.sesiones_pos
   return {
-    sesion: result[0].sesiones_pos as SesionPos,
-    mesa: result[0].mesas as Mesa,
+    sesion: {
+      id: sesionRaw.id,
+      mesaId: sesionRaw.mesaId,
+      subtotal: sesionRaw.subtotal,
+      descripcion: sesionRaw.descripcion ?? null,
+      estado: sesionRaw.estado as 'abierta' | 'facturada' | 'cerrada',
+      createdAt: sesionRaw.createdAt,
+    },
+    mesa: row.mesas as Mesa,
     restaurante: restaurante as Restaurante,
   }
 }

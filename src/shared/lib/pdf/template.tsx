@@ -39,7 +39,7 @@ export interface InvoicePDFProps {
 
 export function InvoicePDF({ factura, restaurante }: InvoicePDFProps) {
   const ivaPercent = +(parseFloat(factura.ivaRate) * 100).toFixed(0)
-  const date = factura.createdAt.toLocaleDateString('es-ES')
+  const date = new Date(factura.createdAt).toLocaleDateString('es-ES')
   return (
     <Document>
       <Page size="A4" style={styles.page}>
