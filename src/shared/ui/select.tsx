@@ -1,4 +1,4 @@
-// src/shared/ui/select.tsx
+"use client"
 import { SelectHTMLAttributes, forwardRef } from 'react'
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
@@ -20,13 +20,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           id={inputId}
           className={`rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 ${error ? 'border-red-500' : 'border-zinc-300'}`}
           aria-invalid={!!error}
+          aria-describedby={error ? `${inputId}-error` : undefined}
           {...props}
         >
           {options.map(o => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>
-        {error && <p className="text-xs text-red-600" role="alert">{error}</p>}
+        {error && <p id={`${inputId}-error`} className="text-xs text-red-600" role="alert">{error}</p>}
       </div>
     )
   }
