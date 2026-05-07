@@ -1,5 +1,15 @@
-// src/features/invoice-emit/actions.ts (STUB — will be replaced in Task 11)
+// src/features/invoice-emit/actions.ts
 'use server'
+import { db, facturas, sesionesPos, restaurantes } from '@/shared/db'
+import { eq } from 'drizzle-orm'
+import { taxFormSchema } from '@/features/tax-form/schema'
+import { calcularIVA } from '@/shared/lib/tax/iva'
+import { getNextNumeroFactura } from '@/shared/lib/numero-factura'
+import { generateInvoicePdf } from '@/shared/lib/pdf/generate'
+import { put } from '@vercel/blob'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export interface EmitInvoiceResult {
   facturaId: string
@@ -11,13 +21,154 @@ export interface EmitInvoiceResult {
 
 export async function emitInvoice(
   _prevState: unknown,
-  _formData: FormData,
-  _sesionId?: string,
-  _restauranteId?: string
+  formData: FormData,
+  sesionId: string,
+  restauranteId: string
 ): Promise<EmitInvoiceResult> {
-  throw new Error('Not implemented yet')
+  const raw = {
+    documentoTipo: formData.get('documentoTipo'),
+    documentoId: formData.get('documentoId'),
+    razonSocial: formData.get('razonSocial'),
+    direccionFacturacion: formData.get('direccionFacturacion'),
+    emailCliente: formData.get('emailCliente') || undefined,
+  }
+
+  const parsed = taxFormSchema.safeParse(raw)
+  if (!parsed.success) {
+    const msg = parsed.error.issues[0]?.message ?? 'Error de validación'
+    return { facturaId: '', pdfUrl: null, numeroFactura: '', emailSent: false, error: msg }
+  }
+  const data = parsed.data
+
+  // Get restaurante for IVA rate
+  const [restaurante] = await db.select().from(restaurantes).where(eq(restaurantes.id, restauranteId))
+  if (!restaurante) return { facturaId: '', pdfUrl: null, numeroFactura: '', emailSent: false, error: 'Restaurante no encontrado' }
+
+  // Get session
+  const [sesion] = await db.select().from(sesionesPos).where(eq(sesionesPos.id, sesionId))
+  if (!sesion) return { facturaId: '', pdfUrl: null, numeroFactura: '', emailSent: false, error: 'Sesión no encontrada' }
+  if (sesion.estado === 'facturada') return { facturaId: '', pdfUrl: null, numeroFactura: '', emailSent: false, error: 'Ya existe una factura para esta sesión' }
+
+  const ivaRate = parseFloat(restaurante.ivaPorcentaje)
+  const { baseImponible, cuotaIva, total } = calcularIVA(parseFloat(sesion.subtotal), ivaRate)
+
+  let facturaId = ''
+  let numeroFactura = ''
+
+  try {
+    await db.transaction(async tx => {
+      // Race condition guard — UNIQUE constraint is DB-level, but check first for a clear error message
+      const existing = await tx.select({ id: facturas.id }).from(facturas).where(eq(facturas.sesionId, sesionId))
+      if (existing.length > 0) throw new Error('DUPLICATE')
+
+      // Cast: PgTransaction shares all DML methods with NeonHttpDatabase; the cast is safe at runtime
+      numeroFactura = await getNextNumeroFactura(tx as unknown as typeof db, restauranteId)
+
+      const [factura] = await tx.insert(facturas).values({
+        numeroFactura,
+        sesionId,
+        restauranteId,
+        documentoTipo: data.documentoTipo,
+        documentoId: data.documentoId,
+        razonSocial: data.razonSocial,
+        direccionFacturacion: data.direccionFacturacion,
+        emailCliente: data.emailCliente || null,
+        baseImponible: String(baseImponible),
+        ivaRate: String(ivaRate),
+        cuotaIva: String(cuotaIva),
+        total: String(total),
+      }).returning()
+
+      facturaId = factura!.id
+
+      await tx.update(sesionesPos)
+        .set({ estado: 'facturada' })
+        .where(eq(sesionesPos.id, sesionId))
+    })
+  } catch (err) {
+    const msg = err instanceof Error && err.message === 'DUPLICATE'
+      ? 'Ya existe una factura para esta sesión'
+      : 'Error al crear la factura'
+    return { facturaId: '', pdfUrl: null, numeroFactura: '', emailSent: false, error: msg }
+  }
+
+  // Generate + upload PDF (outside transaction — factura is already saved)
+  let pdfUrl: string | null = null
+  try {
+    const pdfBuffer = await generateInvoicePdf({
+      factura: {
+        numeroFactura,
+        createdAt: new Date(),
+        documentoTipo: data.documentoTipo,
+        documentoId: data.documentoId,
+        razonSocial: data.razonSocial,
+        direccionFacturacion: data.direccionFacturacion,
+        baseImponible: String(baseImponible),
+        ivaRate: String(ivaRate),
+        cuotaIva: String(cuotaIva),
+        total: String(total),
+      },
+      restaurante: {
+        razonSocial: restaurante.razonSocial,
+        cif: restaurante.cif,
+        direccion: restaurante.direccion,
+      },
+    })
+    const blob = await put(`facturas/${facturaId}.pdf`, pdfBuffer, {
+      access: 'public',
+      contentType: 'application/pdf',
+    })
+    pdfUrl = blob.url
+    await db.update(facturas).set({ pdfUrl }).where(eq(facturas.id, facturaId))
+  } catch {
+    // PDF generation failed — factura is valid, pdfUrl stays null
+  }
+
+  // Send email (non-blocking, outside transaction)
+  let emailSent = false
+  if (data.emailCliente && pdfUrl) {
+    try {
+      await resend.emails.send({
+        from: 'facturas@restofacil.es',
+        to: data.emailCliente,
+        subject: `Tu factura ${numeroFactura}`,
+        html: `<p>Adjuntamos tu factura <strong>${numeroFactura}</strong>.</p><p><a href="${pdfUrl}">Descargar PDF</a></p>`,
+      })
+      emailSent = true
+    } catch {
+      // Email failure is silent
+    }
+  }
+
+  return { facturaId, pdfUrl, numeroFactura, emailSent }
 }
 
-export async function regeneratePdf(_facturaId: string): Promise<{ pdfUrl: string | null }> {
-  throw new Error('Not implemented yet')
+export async function regeneratePdf(facturaId: string): Promise<{ pdfUrl: string | null }> {
+  const [factura] = await db.select().from(facturas).where(eq(facturas.id, facturaId))
+  if (!factura) return { pdfUrl: null }
+  const [restaurante] = await db.select().from(restaurantes).where(eq(restaurantes.id, factura.restauranteId))
+  if (!restaurante) return { pdfUrl: null }
+
+  try {
+    const pdfBuffer = await generateInvoicePdf({
+      factura: {
+        numeroFactura: factura.numeroFactura,
+        createdAt: new Date(factura.createdAt),
+        documentoTipo: factura.documentoTipo,
+        documentoId: factura.documentoId,
+        razonSocial: factura.razonSocial,
+        direccionFacturacion: factura.direccionFacturacion,
+        baseImponible: factura.baseImponible,
+        ivaRate: factura.ivaRate,
+        cuotaIva: factura.cuotaIva,
+        total: factura.total,
+      },
+      restaurante: { razonSocial: restaurante.razonSocial, cif: restaurante.cif, direccion: restaurante.direccion },
+    })
+    const blob = await put(`facturas/${facturaId}.pdf`, pdfBuffer, { access: 'public', contentType: 'application/pdf' })
+    await db.update(facturas).set({ pdfUrl: blob.url }).where(eq(facturas.id, facturaId))
+    return { pdfUrl: blob.url }
+  } catch {
+    return { pdfUrl: null }
+  }
 }
