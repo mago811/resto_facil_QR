@@ -11,14 +11,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputId = id ?? label.toLowerCase().replace(/\s+/g, '-')
     return (
       <div className="flex flex-col gap-1">
-        <label htmlFor={inputId} className="text-sm font-medium text-zinc-700">
+        <label htmlFor={inputId} className="text-sm font-medium text-zinc-900">
           {label}
           {props.required && <span className="ml-1 text-red-500" aria-hidden>*</span>}
         </label>
         <input
           ref={ref}
           id={inputId}
-          className={`rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 ${error ? 'border-red-500 focus:ring-red-500' : 'border-zinc-300'} ${className}`}
+          className={`rounded-md border px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 ${error ? 'border-red-500 focus:ring-red-500' : 'border-zinc-300'} ${className}`}
           aria-invalid={!!error}
           aria-describedby={error ? `${inputId}-error` : undefined}
           {...props}

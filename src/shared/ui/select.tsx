@@ -12,13 +12,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const inputId = id ?? label.toLowerCase().replace(/\s+/g, '-')
     return (
       <div className="flex flex-col gap-1">
-        <label htmlFor={inputId} className="text-sm font-medium text-zinc-700">
+        <label htmlFor={inputId} className="text-sm font-medium text-zinc-900">
           {label}
         </label>
         <select
           ref={ref}
           id={inputId}
-          className={`rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 ${error ? 'border-red-500' : 'border-zinc-300'}`}
+          className={`rounded-md border px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-900 ${error ? 'border-red-500' : 'border-zinc-300'}`}
           aria-invalid={!!error}
           aria-describedby={error ? `${inputId}-error` : undefined}
           {...props}

@@ -22,7 +22,7 @@ export function TaxForm({ action }: TaxFormProps) {
 
   const result = state as EmitInvoiceResult | null
 
-  if (result?.facturaId && !result.error) {
+  if (result?.facturaId) {
     return (
       <div className="flex flex-col gap-4 text-center">
         <div className="text-3xl">✅</div>
@@ -36,8 +36,10 @@ export function TaxForm({ action }: TaxFormProps) {
             className="inline-flex items-center justify-center rounded-md bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-700">
             Descargar PDF
           </a>
+        ) : result.error ? (
+          <p className="text-xs text-red-600">Error al generar el PDF: {result.error}</p>
         ) : (
-          <p className="text-xs text-zinc-400">El PDF se está generando. Recarga en unos segundos.</p>
+          <p className="text-xs text-zinc-500">El PDF se está generando. Recarga en unos segundos.</p>
         )}
       </div>
     )

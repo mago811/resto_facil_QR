@@ -105,6 +105,7 @@ export async function emitInvoice(
 
   // Generate + upload PDF (outside transaction — factura is already saved)
   let pdfUrl: string | null = null
+  let pdfError: string | undefined
   try {
     const pdfBuffer = await generateInvoicePdf({
       factura: {
@@ -131,8 +132,9 @@ export async function emitInvoice(
     })
     pdfUrl = blob.url
     await db.update(facturas).set({ pdfUrl }).where(eq(facturas.id, facturaId))
-  } catch {
-    // PDF generation failed — factura is valid, pdfUrl stays null
+  } catch (err) {
+    console.error('[PDF] generation/upload failed:', err)
+    pdfError = err instanceof Error ? err.message : String(err)
   }
 
   // Send email (non-blocking, outside transaction)
@@ -151,7 +153,7 @@ export async function emitInvoice(
     }
   }
 
-  return { facturaId, pdfUrl, numeroFactura, emailSent }
+  return { facturaId, pdfUrl, numeroFactura, emailSent, error: pdfError }
 }
 
 export async function regeneratePdf(facturaId: string): Promise<{ pdfUrl: string | null }> {
@@ -179,7 +181,8 @@ export async function regeneratePdf(facturaId: string): Promise<{ pdfUrl: string
     const blob = await put(`facturas/${facturaId}.pdf`, pdfBuffer, { access: 'public', contentType: 'application/pdf' })
     await db.update(facturas).set({ pdfUrl: blob.url }).where(eq(facturas.id, facturaId))
     return { pdfUrl: blob.url }
-  } catch {
+  } catch (err) {
+    console.error('[PDF] regenerate failed:', err)
     return { pdfUrl: null }
   }
 }
