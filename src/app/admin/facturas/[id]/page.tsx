@@ -46,7 +46,7 @@ export default async function FacturaDetailPage({ params }: PageProps) {
 
       <div className="mt-4 flex gap-3">
         {factura.pdfUrl ? (
-          <a href={factura.pdfUrl} target="_blank" rel="noreferrer"
+          <a href={`/api/facturas/${factura.id}/pdf`} target="_blank" rel="noreferrer"
             className="rounded-md bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-700">
             Descargar PDF
           </a>

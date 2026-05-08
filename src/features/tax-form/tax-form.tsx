@@ -35,10 +35,9 @@ export function TaxForm({ action, restauranteSlug }: TaxFormProps) {
     setDocError(value && !validateSpanishId(docTipo, value) ? 'Documento de identidad no válido' : '')
   }
 
-  // Debounced search when docId or razonSocial changes
-  function triggerSearch(query: string) {
+  function search(query: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    if (query.length < 2) { setSuggestions([]); return }
+    if (query.length < 2) { setSuggestions([]); setShowSuggestions(false); return }
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/empresas?slug=${encodeURIComponent(restauranteSlug)}&q=${encodeURIComponent(query)}`)
@@ -61,7 +60,6 @@ export function TaxForm({ action, restauranteSlug }: TaxFormProps) {
     setDocError('')
   }
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -99,6 +97,30 @@ export function TaxForm({ action, restauranteSlug }: TaxFormProps) {
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
+      {/* Razón social — primary search field */}
+      <div ref={wrapperRef} className="relative">
+        <Input
+          label="Razón social / Nombre completo" name="razonSocial" required
+          placeholder="Empresa Ficticia SL"
+          value={razonSocial}
+          onChange={e => { setRazonSocial(e.target.value); search(e.target.value) }}
+          onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
+          autoComplete="off"
+        />
+        {showSuggestions && (
+          <ul className="absolute z-10 mt-1 w-full rounded-md border border-zinc-200 bg-white shadow-lg divide-y divide-zinc-100">
+            {suggestions.map(s => (
+              <li key={s.documentoId}
+                onMouseDown={() => selectSuggestion(s)}
+                className="cursor-pointer px-3 py-2.5 hover:bg-zinc-50">
+                <p className="text-sm font-medium text-zinc-900">{s.razonSocial}</p>
+                <p className="text-xs text-zinc-500">{s.documentoTipo} {s.documentoId}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <Select
         label="Tipo de documento" name="documentoTipo" required
         value={docTipo} onChange={e => setDocTipo(e.target.value as DocumentoTipo)}
@@ -108,38 +130,13 @@ export function TaxForm({ action, restauranteSlug }: TaxFormProps) {
           { value: 'NIE', label: 'NIE (extranjeros)' },
         ]}
       />
-
-      {/* Autocomplete wrapper for documentoId */}
-      <div ref={wrapperRef} className="relative">
-        <Input
-          label="Número de documento" name="documentoId" required
-          placeholder="12345678Z"
-          value={docId}
-          onChange={e => { setDocId(e.target.value); triggerSearch(e.target.value) }}
-          onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
-          onBlur={e => validateDocOnBlur(e.target.value)}
-          error={docError}
-          autoComplete="off"
-        />
-        {showSuggestions && (
-          <ul className="absolute z-10 mt-1 w-full rounded-md border border-zinc-200 bg-white shadow-lg">
-            {suggestions.map(s => (
-              <li key={s.documentoId}
-                onMouseDown={() => selectSuggestion(s)}
-                className="cursor-pointer px-3 py-2 text-sm hover:bg-zinc-50">
-                <span className="font-medium text-zinc-900">{s.documentoId}</span>
-                <span className="ml-2 text-zinc-500">{s.razonSocial}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
       <Input
-        label="Razón social / Nombre completo" name="razonSocial" required
-        placeholder="Empresa Ficticia SL"
-        value={razonSocial}
-        onChange={e => { setRazonSocial(e.target.value); triggerSearch(e.target.value) }}
+        label="Número de documento" name="documentoId" required
+        placeholder="12345678Z"
+        value={docId}
+        onChange={e => setDocId(e.target.value)}
+        onBlur={e => validateDocOnBlur(e.target.value)}
+        error={docError}
         autoComplete="off"
       />
       <Input

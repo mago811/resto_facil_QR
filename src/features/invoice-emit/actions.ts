@@ -144,11 +144,12 @@ export async function emitInvoice(
       },
     })
     const blob = await put(`facturas/${facturaId}.pdf`, pdfBuffer, {
-      access: 'public',
+      access: 'private',
       contentType: 'application/pdf',
     })
-    pdfUrl = blob.url
-    await db.update(facturas).set({ pdfUrl }).where(eq(facturas.id, facturaId))
+    // Store blob URL in DB (server-side access), return API route to client
+    await db.update(facturas).set({ pdfUrl: blob.url }).where(eq(facturas.id, facturaId))
+    pdfUrl = `/api/facturas/${facturaId}/pdf`
   } catch (err) {
     console.error('[PDF] generation/upload failed:', err)
     pdfError = err instanceof Error ? err.message : String(err)
@@ -195,9 +196,9 @@ export async function regeneratePdf(facturaId: string): Promise<{ pdfUrl: string
       },
       restaurante: { razonSocial: restaurante.razonSocial, cif: restaurante.cif, direccion: restaurante.direccion },
     })
-    const blob = await put(`facturas/${facturaId}.pdf`, pdfBuffer, { access: 'public', contentType: 'application/pdf' })
+    const blob = await put(`facturas/${facturaId}.pdf`, pdfBuffer, { access: 'private', contentType: 'application/pdf' })
     await db.update(facturas).set({ pdfUrl: blob.url }).where(eq(facturas.id, facturaId))
-    return { pdfUrl: blob.url }
+    return { pdfUrl: `/api/facturas/${facturaId}/pdf` }
   } catch (err) {
     console.error('[PDF] regenerate failed:', err)
     return { pdfUrl: null }
