@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# tooling artifacts
+/test-results/
+/playwright-report/
+.claude/
+.superpowers/
+skills-lock.json
