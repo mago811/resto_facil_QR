@@ -33,6 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             Cerrar sesión
           </button>
         </form>
+        <div className="px-6 pb-4 text-xs text-zinc-600">v0.1.0</div>
       </aside>
       <main className="flex-1 bg-zinc-50 p-8 text-zinc-900">{children}</main>
     </div>
