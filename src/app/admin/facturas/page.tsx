@@ -43,7 +43,7 @@ export default async function FacturasPage({ searchParams }: PageProps) {
         </Link>
       </div>
 
-      <div className="mb-4 flex gap-3">
+      <div className="mb-4">
         <form method="GET" className="flex gap-2 flex-wrap">
           <input name="nif" defaultValue={params.nif} placeholder="Buscar NIF/CIF"
             className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-400" />

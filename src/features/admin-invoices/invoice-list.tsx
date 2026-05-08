@@ -19,8 +19,8 @@ interface InvoiceListProps {
 
 export function InvoiceList({ invoices }: InvoiceListProps) {
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white">
+      <table className="w-full text-sm min-w-[600px]">
         <thead className="border-b border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-900">
           <tr>
             {['Número', 'Fecha', 'Mesa', 'NIF/CIF/NIE', 'Total', 'PDF'].map(h => (
