@@ -1,7 +1,7 @@
 // src/app/(admin)/mesas/page.tsx
 import { auth } from '@/auth'
 import { getMesasConSesion } from '@/features/admin-mesas/get-mesas'
-import { createMesa, createSesionPos, toggleMesa } from '@/features/admin-mesas/actions'
+import { createMesa, createSesionPos, toggleMesa, cerrarSesion } from '@/features/admin-mesas/actions'
 import { QRGenerator } from '@/features/admin-mesas/qr-generator'
 import { Button } from '@/shared/ui/button'
 import { redirect } from 'next/navigation'
@@ -51,6 +51,14 @@ export default async function MesasPage() {
                 </Button>
               </form>
             </div>
+
+            {mesa.sesionActiva && (
+              <form action={cerrarSesion.bind(null, mesa.sesionActiva.id) as (fd: FormData) => Promise<void>} className="mt-2">
+                <Button type="submit" variant="ghost" className="text-xs text-red-600 hover:bg-red-50">
+                  Cerrar sin factura
+                </Button>
+              </form>
+            )}
 
             <div className="mt-4 border-t border-zinc-100 pt-4">
               <QRGenerator mesaNumero={mesa.numero} restauranteSlug={restauranteSlug} baseUrl={baseUrl} />

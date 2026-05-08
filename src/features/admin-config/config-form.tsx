@@ -24,15 +24,15 @@ export function ConfigForm({ config }: ConfigFormProps) {
         { name: 'direccion', label: 'Dirección fiscal', defaultValue: config.direccion },
       ] as { name: string; label: string; defaultValue: string }[]).map(f => (
         <div key={f.name} className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-zinc-700">{f.label}</label>
+          <label className="text-sm font-medium text-zinc-900">{f.label}</label>
           <input name={f.name} defaultValue={f.defaultValue} required
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm" />
+            className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400" />
         </div>
       ))}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-zinc-700">IVA por defecto</label>
+        <label className="text-sm font-medium text-zinc-900">IVA por defecto</label>
         <select name="ivaPorcentaje" defaultValue={config.ivaPorcentaje}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm">
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900">
           <option value="0.10">10% (Hostelería)</option>
           <option value="0.21">21% (General)</option>
           <option value="0.04">4% (Reducido)</option>

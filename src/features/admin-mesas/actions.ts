@@ -27,6 +27,11 @@ export async function toggleMesa(mesaId: string, activa: boolean) {
   revalidatePath('/admin/mesas')
 }
 
+export async function cerrarSesion(sesionId: string) {
+  await db.update(sesionesPos).set({ estado: 'cerrada' }).where(eq(sesionesPos.id, sesionId))
+  revalidatePath('/admin/mesas')
+}
+
 const createSesionSchema = z.object({
   mesaId: z.string().uuid(),
   subtotal: z.coerce.number().positive(),
