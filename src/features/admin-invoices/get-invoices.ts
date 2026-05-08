@@ -15,7 +15,11 @@ const PAGE_SIZE = 20
 export async function getInvoices(filter: InvoiceFilter) {
   const conditions = [eq(facturas.restauranteId, filter.restauranteId)]
   if (filter.fechaDesde) conditions.push(gte(facturas.createdAt, new Date(filter.fechaDesde)))
-  if (filter.fechaHasta) conditions.push(lte(facturas.createdAt, new Date(filter.fechaHasta)))
+  if (filter.fechaHasta) {
+    const endOfDay = new Date(filter.fechaHasta)
+    endOfDay.setHours(23, 59, 59, 999)
+    conditions.push(lte(facturas.createdAt, endOfDay))
+  }
   if (filter.nif) conditions.push(ilike(facturas.documentoId, `%${filter.nif}%`))
 
   const page = filter.page ?? 1

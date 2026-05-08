@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { getInvoices } from '@/features/admin-invoices/get-invoices'
 import { InvoiceList } from '@/features/admin-invoices/invoice-list'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 interface PageProps {
   searchParams: Promise<{ page?: string; nif?: string; desde?: string; hasta?: string }>
@@ -11,7 +12,8 @@ interface PageProps {
 export default async function FacturasPage({ searchParams }: PageProps) {
   const params = await searchParams
   const session = await auth()
-  const restauranteId = session!.user.restauranteId
+  if (!session?.user?.restauranteId) redirect('/login')
+  const restauranteId = session.user.restauranteId
 
   const page = params.page ? parseInt(params.page) : 1
   const { invoices, totalPages } = await getInvoices({

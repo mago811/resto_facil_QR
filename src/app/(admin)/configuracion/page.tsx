@@ -2,11 +2,12 @@
 import { auth } from '@/auth'
 import { getRestauranteConfig } from '@/features/admin-config/get-config'
 import { ConfigForm } from '@/features/admin-config/config-form'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
 export default async function ConfiguracionPage() {
   const session = await auth()
-  const restauranteId = session!.user.restauranteId
+  if (!session?.user?.restauranteId) redirect('/login')
+  const restauranteId = session.user.restauranteId
   const config = await getRestauranteConfig(restauranteId)
   if (!config) notFound()
 
