@@ -71,15 +71,11 @@ export default async function MesasPage() {
             {!mesa.sesionActiva && mesa.activa && (
               <form action={handleCreateSesionPos} className="mt-3 flex flex-col gap-2">
                 <input type="hidden" name="mesaId" value={mesa.id} />
-                <label className="text-xs font-medium text-zinc-900">Subtotal (€)
+                <label className="text-xs font-medium text-zinc-900">Total (IVA incluido)
                   <input name="subtotal" type="number" step="0.01" placeholder="0.00" required
                     className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-900" />
                 </label>
-                <label className="text-xs font-medium text-zinc-900">Descripción (opcional)
-                  <input name="descripcion" placeholder="Ej: Mesa 2 cena"
-                    className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-900" />
-                </label>
-                <Button type="submit" variant="secondary" className="text-xs">Abrir sesión</Button>
+                <Button type="submit" variant="secondary" className="text-xs">Cobrar mesa</Button>
               </form>
             )}
           </div>

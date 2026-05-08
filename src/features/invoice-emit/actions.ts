@@ -1,6 +1,6 @@
 // src/features/invoice-emit/actions.ts
 'use server'
-import { db, facturas, sesionesPos, restaurantes } from '@/shared/db'
+import { db, facturas, sesionesPos, restaurantes, empresas } from '@/shared/db'
 import { and, eq } from 'drizzle-orm'
 import { taxFormSchema } from '@/features/tax-form/schema'
 import { calcularIVA } from '@/shared/lib/tax/iva'
@@ -92,6 +92,23 @@ export async function emitInvoice(
     await db.update(sesionesPos)
       .set({ estado: 'facturada' })
       .where(eq(sesionesPos.id, sesionId))
+
+    // Upsert company data for autocomplete (no email stored)
+    await db.insert(empresas).values({
+      restauranteId,
+      documentoTipo: data.documentoTipo,
+      documentoId: data.documentoId,
+      razonSocial: data.razonSocial,
+      direccionFacturacion: data.direccionFacturacion,
+    }).onConflictDoUpdate({
+      target: [empresas.restauranteId, empresas.documentoId],
+      set: {
+        documentoTipo: data.documentoTipo,
+        razonSocial: data.razonSocial,
+        direccionFacturacion: data.direccionFacturacion,
+        updatedAt: new Date(),
+      },
+    })
   } catch (err) {
     const isDuplicate =
       err instanceof Error &&

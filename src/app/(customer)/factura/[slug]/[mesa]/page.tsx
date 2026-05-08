@@ -65,7 +65,7 @@ export default async function FacturaPage({ params }: PageProps) {
 
       <div className="rounded-lg border border-zinc-200 bg-white p-6">
         <h2 className="mb-4 text-sm font-semibold text-zinc-900">Tus datos fiscales</h2>
-        <TaxForm action={boundAction} />
+        <TaxForm action={boundAction} restauranteSlug={slug} />
       </div>
     </div>
   )

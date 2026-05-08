@@ -35,18 +35,16 @@ export async function cerrarSesion(sesionId: string) {
 const createSesionSchema = z.object({
   mesaId: z.string().uuid(),
   subtotal: z.coerce.number().positive(),
-  descripcion: z.string().optional(),
 })
 
 export async function createSesionPos(formData: FormData) {
   const parsed = createSesionSchema.safeParse({
     mesaId: formData.get('mesaId'),
     subtotal: formData.get('subtotal'),
-    descripcion: formData.get('descripcion') || undefined,
   })
   if (!parsed.success) return { error: parsed.error.issues[0]?.message }
   await db.insert(sesionesPos).values({
-    ...parsed.data,
+    mesaId: parsed.data.mesaId,
     subtotal: String(parsed.data.subtotal),
   })
   revalidatePath('/admin/mesas')

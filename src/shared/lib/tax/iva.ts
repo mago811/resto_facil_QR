@@ -5,9 +5,10 @@ export interface IVAResult {
   total: number
 }
 
-export function calcularIVA(subtotal: number, ivaRate: number): IVAResult {
-  const baseImponible = +subtotal.toFixed(2)
-  const cuotaIva = +(baseImponible * ivaRate).toFixed(2)
+// Input is the total price IVA-included. Back-calculates base and IVA quota.
+export function calcularIVA(totalConIva: number, ivaRate: number): IVAResult {
+  const baseImponible = +(totalConIva / (1 + ivaRate)).toFixed(2)
+  const cuotaIva = +(totalConIva - baseImponible).toFixed(2)
   const total = +(baseImponible + cuotaIva).toFixed(2)
   return { baseImponible, cuotaIva, total }
 }

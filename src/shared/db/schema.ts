@@ -1,6 +1,6 @@
 // src/shared/db/schema.ts
 import {
-  pgTable, uuid, text, decimal, boolean, integer, timestamp
+  pgTable, uuid, text, decimal, boolean, integer, timestamp, uniqueIndex
 } from 'drizzle-orm/pg-core'
 
 export const restaurantes = pgTable('restaurantes', {
@@ -41,6 +41,18 @@ export const sesionesPos = pgTable('sesiones_pos', {
   estado: text('estado').notNull().default('abierta'), // abierta | facturada | cerrada
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const empresas = pgTable('empresas', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  restauranteId: uuid('restaurante_id').notNull().references(() => restaurantes.id),
+  documentoTipo: text('documento_tipo').notNull(), // NIF | CIF | NIE
+  documentoId: text('documento_id').notNull(),
+  razonSocial: text('razon_social').notNull(),
+  direccionFacturacion: text('direccion_facturacion').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex('empresas_restaurante_documento_idx').on(t.restauranteId, t.documentoId),
+])
 
 export const facturas = pgTable('facturas', {
   id: uuid('id').primaryKey().defaultRandom(),
