@@ -3,6 +3,7 @@ import { auth } from '@/auth'
 import { getMesasConSesion } from '@/features/admin-mesas/get-mesas'
 import { createMesa, createSesionPos, toggleMesa, cerrarSesion } from '@/features/admin-mesas/actions'
 import { QRGenerator } from '@/features/admin-mesas/qr-generator'
+import { QRFullscreen } from '@/features/admin-mesas/qr-fullscreen'
 import { Button } from '@/shared/ui/button'
 import { redirect } from 'next/navigation'
 
@@ -61,7 +62,10 @@ export default async function MesasPage() {
             )}
 
             <div className="mt-4 border-t border-zinc-100 pt-4">
-              <QRGenerator mesaNumero={mesa.numero} restauranteSlug={restauranteSlug} baseUrl={baseUrl} />
+              <QRFullscreen mesaNumero={mesa.numero} restauranteSlug={restauranteSlug} baseUrl={baseUrl} />
+              <div className="mt-3">
+                <QRGenerator mesaNumero={mesa.numero} restauranteSlug={restauranteSlug} baseUrl={baseUrl} />
+              </div>
             </div>
 
             {!mesa.sesionActiva && mesa.activa && (
