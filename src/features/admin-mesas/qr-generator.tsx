@@ -32,7 +32,7 @@ export function QRGenerator({ mesaNumero, restauranteSlug, baseUrl }: QRGenerato
   return (
     <div className="flex flex-col items-center gap-3">
       <canvas ref={canvasRef} />
-      <p className="text-xs text-zinc-500 break-all">{url}</p>
+      <p className="text-xs text-zinc-900 break-all">{url}</p>
       <Button variant="secondary" onClick={download}>Descargar PNG</Button>
     </div>
   )

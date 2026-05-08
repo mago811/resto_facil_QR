@@ -38,8 +38,8 @@ export default async function FacturaDetailPage({ params }: PageProps) {
           ['Total', `${parseFloat(factura.total).toFixed(2)} €`],
         ] as [string, string][]).map(([label, value]) => (
           <div key={label} className="flex justify-between px-4 py-3 text-sm">
-            <span className="text-zinc-500">{label}</span>
-            <span className="font-medium">{value}</span>
+            <span className="text-zinc-900 font-medium">{label}</span>
+            <span className="text-zinc-900">{value}</span>
           </div>
         ))}
       </div>

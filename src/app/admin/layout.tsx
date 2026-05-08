@@ -29,12 +29,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           }}
           className="p-4"
         >
-          <button type="submit" className="w-full rounded px-3 py-2 text-sm text-zinc-400 hover:bg-zinc-700 text-left">
+          <button type="submit" className="w-full rounded px-3 py-2 text-sm text-zinc-300 hover:bg-zinc-700 text-left">
             Cerrar sesión
           </button>
         </form>
       </aside>
-      <main className="flex-1 bg-zinc-50 p-8">{children}</main>
+      <main className="flex-1 bg-zinc-50 p-8 text-zinc-900">{children}</main>
     </div>
   )
 }

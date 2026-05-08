@@ -46,11 +46,11 @@ export default async function FacturasPage({ searchParams }: PageProps) {
       <div className="mb-4 flex gap-3">
         <form method="GET" className="flex gap-2 flex-wrap">
           <input name="nif" defaultValue={params.nif} placeholder="Buscar NIF/CIF"
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm" />
+            className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-400" />
           <input name="desde" type="date" defaultValue={params.desde}
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm" />
+            className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900" />
           <input name="hasta" type="date" defaultValue={params.hasta}
-            className="rounded border border-zinc-300 px-3 py-1.5 text-sm" />
+            className="rounded border border-zinc-300 px-3 py-1.5 text-sm text-zinc-900" />
           <button type="submit" className="rounded bg-zinc-900 px-3 py-1.5 text-sm text-white">Filtrar</button>
         </form>
       </div>
@@ -67,7 +67,7 @@ export default async function FacturasPage({ searchParams }: PageProps) {
           ) : (
             <span />
           )}
-          <span className="text-zinc-500">Página {page} de {totalPages}</span>
+          <span className="text-zinc-900">Página {page} de {totalPages}</span>
           {page < totalPages ? (
             <Link href={buildPageUrl(page + 1)}
               className="rounded border border-zinc-300 bg-white px-3 py-1.5 hover:bg-zinc-50">
