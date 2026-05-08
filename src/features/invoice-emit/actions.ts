@@ -1,7 +1,7 @@
 // src/features/invoice-emit/actions.ts
 'use server'
 import { db, facturas, sesionesPos, restaurantes } from '@/shared/db'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { taxFormSchema } from '@/features/tax-form/schema'
 import { calcularIVA } from '@/shared/lib/tax/iva'
 import { getNextNumeroFactura } from '@/shared/lib/numero-factura'
@@ -56,36 +56,42 @@ export async function emitInvoice(
   let numeroFactura = ''
 
   try {
-    await db.transaction(async tx => {
-      // Race condition guard — UNIQUE constraint is DB-level, but check first for a clear error message
-      const existing = await tx.select({ id: facturas.id }).from(facturas).where(eq(facturas.sesionId, sesionId))
-      if (existing.length > 0) throw new Error('DUPLICATE')
+    // Race condition guard — UNIQUE constraint is DB-level, but check first for a clear error message
+    const existing = await db.select({ id: facturas.id }).from(facturas)
+      .where(eq(facturas.sesionId, sesionId))
+      .limit(1)
+    if (existing.length > 0) throw new Error('DUPLICATE')
 
-      // Cast: PgTransaction shares all DML methods with NeonHttpDatabase; the cast is safe at runtime
-      numeroFactura = await getNextNumeroFactura(tx as unknown as typeof db, restauranteId)
+    // Verify session is still open
+    const sesionActiva = await db.select({ id: sesionesPos.id }).from(sesionesPos)
+      .where(and(eq(sesionesPos.id, sesionId), eq(sesionesPos.estado, 'abierta')))
+      .limit(1)
+    if (!sesionActiva[0]) throw new Error('DUPLICATE')
 
-      const [factura] = await tx.insert(facturas).values({
-        numeroFactura,
-        sesionId,
-        restauranteId,
-        documentoTipo: data.documentoTipo,
-        documentoId: data.documentoId,
-        razonSocial: data.razonSocial,
-        direccionFacturacion: data.direccionFacturacion,
-        emailCliente: data.emailCliente || null,
-        baseImponible: String(baseImponible),
-        ivaRate: String(ivaRate),
-        cuotaIva: String(cuotaIva),
-        total: String(total),
-      }).returning()
+    // Atomic UPDATE to get next invoice number
+    numeroFactura = await getNextNumeroFactura(db, restauranteId)
 
-      if (!factura) throw new Error('Insert did not return a row')
-      facturaId = factura.id
+    const [factura] = await db.insert(facturas).values({
+      numeroFactura,
+      sesionId,
+      restauranteId,
+      documentoTipo: data.documentoTipo,
+      documentoId: data.documentoId,
+      razonSocial: data.razonSocial,
+      direccionFacturacion: data.direccionFacturacion,
+      emailCliente: data.emailCliente || null,
+      baseImponible: String(baseImponible),
+      ivaRate: String(ivaRate),
+      cuotaIva: String(cuotaIva),
+      total: String(total),
+    }).returning()
 
-      await tx.update(sesionesPos)
-        .set({ estado: 'facturada' })
-        .where(eq(sesionesPos.id, sesionId))
-    })
+    if (!factura) throw new Error('Insert did not return a row')
+    facturaId = factura.id
+
+    await db.update(sesionesPos)
+      .set({ estado: 'facturada' })
+      .where(eq(sesionesPos.id, sesionId))
   } catch (err) {
     const isDuplicate =
       err instanceof Error &&
