@@ -59,10 +59,14 @@ export default async function MesasPage() {
             {!mesa.sesionActiva && mesa.activa && (
               <form action={handleCreateSesionPos} className="mt-3 flex flex-col gap-2">
                 <input type="hidden" name="mesaId" value={mesa.id} />
-                <input name="subtotal" type="number" step="0.01" placeholder="Subtotal (€)" required
-                  className="rounded border border-zinc-300 px-2 py-1 text-sm" />
-                <input name="descripcion" placeholder="Descripción (opcional)"
-                  className="rounded border border-zinc-300 px-2 py-1 text-sm" />
+                <label className="text-xs font-medium text-zinc-900">Subtotal (€)
+                  <input name="subtotal" type="number" step="0.01" placeholder="0.00" required
+                    className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-900" />
+                </label>
+                <label className="text-xs font-medium text-zinc-900">Descripción (opcional)
+                  <input name="descripcion" placeholder="Ej: Mesa 2 cena"
+                    className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1 text-sm text-zinc-900" />
+                </label>
                 <Button type="submit" variant="secondary" className="text-xs">Abrir sesión</Button>
               </form>
             )}
@@ -75,9 +79,9 @@ export default async function MesasPage() {
         <form action={handleCreateMesa} className="flex gap-3">
           <input type="hidden" name="restauranteId" value={restauranteId} />
           <input name="numero" type="number" placeholder="Número" required
-            className="w-20 rounded border border-zinc-300 px-3 py-2 text-sm" />
+            className="w-20 rounded border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400" />
           <input name="nombre" placeholder="Nombre (opcional)"
-            className="flex-1 rounded border border-zinc-300 px-3 py-2 text-sm" />
+            className="flex-1 rounded border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400" />
           <Button type="submit">Crear mesa</Button>
         </form>
       </div>
